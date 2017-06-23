@@ -1,0 +1,4 @@
+secretaris@nachtenontij.nl bas@westerbaan.name
+uit@nachtenontij.nl uit@lists.nachtenontij.nl
+test@nachtenontij.nl test@lists.nachtenontij.nl
+@{{ grains['fqdn'] }} secretaris@nachtenontij.nl
