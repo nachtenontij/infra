@@ -1,0 +1,13 @@
++ /etc
++ /home
++ /root
++ /opt/mattermost/mattermost/data
++ /srv
++ /var
++ /var/lib
++ /var/lib/mailman
++ /var/lib/mysql
+- /var/lib/*
++ /var/log
+- /var/*
+- /*
