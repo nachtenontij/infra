@@ -4,7 +4,7 @@ mailman packages:
             - mailman
 fcgiwrap:
     service.running
-/etc/nginx/cetana.d/10-mailman.conf:
+/etc/nginx/site.d/10-mailman.conf:
     file.managed:
         - source: salt://mailman.nginx.conf
         - template: jinja

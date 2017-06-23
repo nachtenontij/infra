@@ -6,14 +6,17 @@ nginx packages:
             - letsencrypt
 /etc/nginx/sites-enabled/default:
     file.absent
-/etc/nginx/cetana.d:
+/srv/default/htdocs:
+    file.directory:
+        - makedirs: true
+/etc/nginx/site.d:
     file.directory
 /etc/nginx/backends:
     file.directory
 /etc/nginx/backends/fcgiwrap:
     file.managed:
         - source: salt://fcgiwrap.nginx-backend
-/etc/nginx/sites-enabled/cetana.conf:
+/etc/nginx/sites-enabled/site.conf:
     file.managed:
         - source: salt://site.nginx.conf
         - template: jinja
@@ -21,5 +24,5 @@ nginx running:
     service.running:
         - name: nginx
         - watch:
-            - file: /etc/nginx/sites-enabled/cetana.conf
-            - file: /etc/nginx/cetana.d/*.conf
+            - file: /etc/nginx/sites-enabled/*.conf
+            - file: /etc/nginx/site.d/*.conf
