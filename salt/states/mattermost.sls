@@ -31,3 +31,9 @@ mattermost grant:
     file.managed:
         - source: salt://mattermost.nginx.conf
         - template: jinja
+/etc/systemd/system/mattermost.service:
+    file.managed:
+        - source: salt://mattermost.service
+mattermost running:
+    service.running:
+        - name: mattermost

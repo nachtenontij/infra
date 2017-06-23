@@ -1,0 +1,12 @@
+[Unit]
+Description=Mattermost is an open source, self-hosted Slack-alternative
+After=syslog.target network.target mariadb.service
+
+[Service]
+User=mattermost
+ExecStart=/opt/mattermost/mattermost/bin/platform -c ../config.json
+PrivateTmp=yes
+WorkingDirectory=/opt/mattermost/mattermost
+
+[Install]
+WantedBy=multi-user.target
