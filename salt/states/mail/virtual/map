@@ -1,6 +1,12 @@
-secretaris@{{ grains['fqdn'] }} bas@westerbaan.name
-
 uit@nachtenontij.nl uit@lists.{{ grains['fqdn'] }}
 test@nachtenontij.nl test@lists.{{ grains['fqdn'] }}
+bestuur@nachtenontij.nl bestuur@lists.{{ grains['fqdn'] }}
+buza@nachtenontij.nl buza@lists.{{ grains['fqdn'] }}
+
+buitenlandsezaken@{{ grains['fqdn'] }} buza@{{ grains['fqdn'] }}
+
+secretaris@{{ grains['fqdn'] }} bas@westerbaan.name
+penningmeester@{{ grains['fqdn'] }} s.vanbezooijen@gmail.com
+voorzitter@{{ grains['fqdn'] }} annemiekarfman@gmail.com
 
 @{{ grains['fqdn'] }} secretaris@{{ grains['fqdn'] }}
