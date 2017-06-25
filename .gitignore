@@ -1,0 +1,5 @@
+/.vagrant
+/.vagrant-network-interface
+/salt/pillar/vagrant.sls
+.DS_Store
+*.swp

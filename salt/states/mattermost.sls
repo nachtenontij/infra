@@ -12,7 +12,7 @@ mattermost mysql:
     mysql_user.present:
         - host: localhost
         - name: mattermost
-        - password: {{ pillar['secrets']['mysql']['mattermost'] }}
+        - password: {{ pillar['secrets']['mysql_mattermost'] }}
     mysql_database.present:
         - name: mattermost
 mattermost grant:
