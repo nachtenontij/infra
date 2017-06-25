@@ -2,6 +2,7 @@ uit@nachtenontij.nl uit@lists.{{ grains['fqdn'] }}
 test@nachtenontij.nl test@lists.{{ grains['fqdn'] }}
 bestuur@nachtenontij.nl bestuur@lists.{{ grains['fqdn'] }}
 buza@nachtenontij.nl buza@lists.{{ grains['fqdn'] }}
+social@nachtenontij.nl social@lists.{{ grains['fqdn'] }}
 
 buitenlandsezaken@{{ grains['fqdn'] }} buza@{{ grains['fqdn'] }}
 
