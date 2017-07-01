@@ -17,6 +17,8 @@ nginx packages:
     file.managed:
         - source: salt://fcgiwrap.nginx-backend
 /etc/nginx/sites-enabled/site.conf:
+    file.absent
+/etc/nginx/sites-enabled/00-site.conf:
     file.managed:
         - source: salt://site.nginx.conf
         - template: jinja

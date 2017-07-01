@@ -1,0 +1,10 @@
+[Unit]
+Description=Ontijd API server
+After=syslog.target network.target mongodb.service mattermost.service
+
+[Service]
+User=ontijd
+ExecStart=/usr/local/go/bin/ontijd
+
+[Install]
+WantedBy=multi-user.target

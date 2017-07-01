@@ -45,8 +45,22 @@ type UserData struct {
 	Suffix        string // e.g. M.Sc
 
 	DateOfBirth time.Time
+
+	PasskeyHash *PasskeyHash
 }
 
+type PasskeyHashType int8
+
+const (
+	Sha3 PasskeyHashType = iota
+)
+
+type PasskeyHash struct {
+	Type PasskeyHashType
+	Data []byte
+}
+
+// Address of a user
 type Address struct {
 	Street  string
 	Number  string
@@ -56,8 +70,16 @@ type Address struct {
 	Country string
 }
 
+// Group specific data
 type GroupData struct {
 	Description Text
+}
+
+type SessionData struct {
+	Id           bson.ObjectId `bson:"id"`
+	UserId       bson.ObjectId
+	Created      time.Time
+	LastActivity time.Time
 }
 
 // TODO move
