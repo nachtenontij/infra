@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/nachtenontij/infra/member"
 	"gopkg.in/yaml.v2"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -21,12 +22,16 @@ func main() {
 }
 
 type Program struct {
-	Url string
+	Url     string
+	Session string
 }
 
 func (p *Program) Run(args []string) {
 	fs := flag.NewFlagSet("neo", flag.ExitOnError)
-	fs.StringVar(&p.Url, "url", "https://nachtenontij.nl", "Url of ontij")
+	fs.StringVar(&p.Url, "url", "https://nachtenontij.nl",
+		"Url of ontijd")
+	fs.StringVar(&p.Session, "session", "",
+		"Sets session key manually - for bootstrapping")
 	fs.Parse(args)
 
 	args = fs.Args()
@@ -45,6 +50,60 @@ func (p *Program) Run(args []string) {
 	}
 }
 
+func (p *Program) Authorization() string {
+	return p.Session
+}
+
+func (p *Program) Request(method, name string, useQueryString bool,
+	request, response interface{}) (err error) {
+
+	var body io.Reader
+	u := p.Url + "/api/" + name
+
+	reqdata, err := json.Marshal(request)
+	if err != nil {
+		return
+	}
+	query := url.Values{"request": {string(reqdata)}}.Encode()
+
+	if useQueryString {
+		u = u + "?" + query
+	} else {
+		body = strings.NewReader(query)
+	}
+
+	httpreq, err := http.NewRequest(method, u, body)
+	if err != nil {
+		return
+	}
+
+	auth := p.Authorization()
+	if auth != "" {
+		httpreq.Header.Set("Authorization", "basic "+auth)
+	}
+
+	if !useQueryString {
+		httpreq.Header.Set("Content-Type",
+			"application/x-www-form-urlencoded")
+	}
+
+	httpresp, err := http.DefaultClient.Do(httpreq)
+	if err != nil {
+		return
+	}
+
+	defer httpresp.Body.Close()
+	data, err := ioutil.ReadAll(httpresp.Body)
+
+	err = json.Unmarshal(data, response)
+	if err != nil {
+		return fmt.Errorf("could not unmarshal %s: %s",
+			string(data), err)
+	}
+
+	return nil
+}
+
 type Enlist struct {
 	Program
 
@@ -53,34 +112,23 @@ type Enlist struct {
 
 func (c *Enlist) Run(args []string) {
 	fs := flag.NewFlagSet("enlist", flag.ExitOnError)
-	fs.StringVar(&c.File, "file", "", "Read request from given file.")
+	// no flags yet
 	fs.Parse(args)
 
 	var req member.EnlistRequest
+	var resp member.EnlistResponse
 
 	// let the user fill the struct
 	if !FillStruct(&req) {
 		os.Exit(2)
 	}
 
-	data, err := json.Marshal(req)
+	err := c.Program.Request("POST", "enlist", false, req, &resp)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("request failed: %s", err)
 	}
 
-	resp, err := http.PostForm(c.Program.Url+"/api/enlist",
-		url.Values{"request": {string(data)}})
-
-	if err != nil {
-		log.Fatalf("failed to POST: %s", err)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("failed to read response: %s", err)
-	}
-
-	fmt.Printf("response: %s\n", body)
+	fmt.Printf("response: %s\n", resp)
 }
 
 func FillStruct(obj interface{}) bool {
