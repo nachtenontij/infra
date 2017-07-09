@@ -18,8 +18,10 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func CommonDataHandler(w http.ResponseWriter, r *http.Request) {
-    server.WriteJsonResponse(w, member.CommonDataResponse{
-        PasskeySalt: "todo", // TODO make configurable
-    })
+func EnlistHandler(w http.ResponseWriter, r *http.Request) {
+    var req member.EnlistRequest
+    if !server.ReadJsonRequest(w, r, &req) {
+        return
+    }
+    server.WriteJsonResponse(w, "hi")
 }

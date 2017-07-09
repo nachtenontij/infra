@@ -1,8 +1,7 @@
 package member
 
 import (
-    // "github.com/nachtenontij/infra/base"
-	// "gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type LoginRequest struct {
@@ -16,4 +15,17 @@ type LoginResponse struct {
 
 type CommonDataResponse struct {
     PasskeySalt string
+}
+
+type EnlistRequest struct {
+    Handle  string
+    EMail string
+    Address Address
+    Phonenumber string
+    InvitedBy *bson.ObjectId
+    Person Person
+}
+
+type EnlistResponse struct {
+    Id bson.ObjectId
 }

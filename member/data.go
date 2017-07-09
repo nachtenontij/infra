@@ -35,8 +35,17 @@ type UserData struct {
 	// Contact
 	EMail   string
 	Address *Address
+    Phonenumbers []string
 
-	// Person
+    Person Person
+
+    InvitedBy   bson.ObjectId
+
+    // Security
+	PasswordHash *string
+}
+
+type Person struct {
 	GivenNames    []string // e.g. ["Claire", "Marie"]
 	TussenVoegsel string   // e.g. van der, van
 	LastName      string
@@ -46,8 +55,6 @@ type UserData struct {
 	Suffix        string // e.g. M.Sc
 
 	DateOfBirth time.Time
-
-	PasswordHash *string
 }
 
 // Address of a user
