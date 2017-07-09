@@ -5,27 +5,27 @@ import (
 )
 
 type LoginRequest struct {
-    Handle string
-    Password string
+	Handle   string
+	Password string
 }
 
 type LoginResponse struct {
-    SessionKey string
+	SessionKey string
 }
 
 type CommonDataResponse struct {
-    PasskeySalt string
+	PasskeySalt string
 }
 
 type EnlistRequest struct {
-    Handle  string
-    EMail string
-    Address Address
-    Phonenumber string
-    InvitedBy *bson.ObjectId
-    Person Person
+	Handle      string
+	EMail       string
+	Address     Address
+	Phonenumber string
+	InvitedBy   string
+	Person      Person
 }
 
 type EnlistResponse struct {
-    Id bson.ObjectId
+	Id bson.ObjectId
 }
