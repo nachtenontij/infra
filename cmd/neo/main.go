@@ -6,25 +6,25 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
+	"net/url"
 )
 
 func main() {
-	var url string
+	var u string
 
-	flag.StringVar(&url, "url", "https://nachtenontij.nl", "Url of ontij")
+	flag.StringVar(&u, "url", "https://nachtenontij.nl", "Url of ontij")
 	flag.Parse()
 
-	resp, err := http.Post(url+"/api/login", "application/json",
-		strings.NewReader("{hi:there}"))
+	resp, err := http.PostForm(u+"/api/login",
+		url.Values{"request": {"{}"}})
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("failed to POST: %s", err))
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("failed to read response: %s", err))
 	}
 
 	fmt.Printf("response: %s\n", body)
