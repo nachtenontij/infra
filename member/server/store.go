@@ -8,6 +8,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -66,16 +67,27 @@ func SessionByKey(key string) *Session {
 	return &Session{data: &data}
 }
 
+func SessionFromRequest(r *http.Request) *Session {
+	session, _ := r.Context().Value("session").(*Session)
+	return session
+}
+
 // Updates LastActivity on Session
-func (s Session) Touch() {
+func (s *Session) Touch() {
 	s.data.LastActivity = time.Now()
 	s.Save()
 }
 
 // Saves the session to the database
-func (s Session) Save() {
+func (s *Session) Save() {
 	if err := scol.Update(bson.M{"Key": s.data.Key}, s.data); err != nil {
 		log.Printf("Session.Save(): scol.Update(): %s", err)
+	}
+}
+
+func (s *Session) Logout() {
+	if err := scol.Remove(bson.M{"Key": s.data.Key}); err != nil {
+		log.Printf("Session.Logout(): %s", err)
 	}
 }
 

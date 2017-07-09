@@ -24,7 +24,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-
+	SessionFromRequest(r).Logout()
+	server.WriteJsonResponse(w, true)
 }
 
 func EnlistHandler(w http.ResponseWriter, r *http.Request) {
