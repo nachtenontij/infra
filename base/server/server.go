@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"github.com/gorilla/mux"
 	"net/http"
 	"encoding/json"
@@ -26,6 +27,8 @@ func ListenAndServe() error {
         registerUrls(r)
     }
 	http.Handle("/", r)
+
+    log.Printf("Listening on %s ...", Settings.BindAddress)
 
 	return http.ListenAndServe(Settings.BindAddress, nil)
 }
