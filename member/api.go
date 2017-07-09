@@ -13,10 +13,6 @@ type LoginResponse struct {
 	SessionKey string
 }
 
-type CommonDataResponse struct {
-	PasskeySalt string
-}
-
 type EnlistRequest struct {
 	Handle      string
 	EMail       string

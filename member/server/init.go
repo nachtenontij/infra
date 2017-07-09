@@ -5,6 +5,7 @@ import (
 )
 
 func init() {
-    server.RegisterRegisterUrls(RegisterUrls)
-    server.RegisterInitializeCollections(InitializeCollections)
+	server.RegisterRegisterUrls(RegisterUrls)
+	server.RegisterInitializeCollections(InitializeCollections)
+	server.RegisterMiddleware(Middleware)
 }

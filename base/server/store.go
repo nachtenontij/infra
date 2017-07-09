@@ -5,10 +5,11 @@ import (
 )
 
 type InitializeCollectionsFunc func(*mgo.Database)
+
 var initializeCollectionsFuncs []InitializeCollectionsFunc
 
 func RegisterInitializeCollections(f InitializeCollectionsFunc) {
-    initializeCollectionsFuncs = append(initializeCollectionsFuncs, f)
+	initializeCollectionsFuncs = append(initializeCollectionsFuncs, f)
 }
 
 // Connection to the mongo database
@@ -23,9 +24,9 @@ func ConnectToDatabase() (err error) {
 	}
 	Db = MongoConn.DB("neo")
 
-    for _, initializeCollections := range(initializeCollectionsFuncs) {
-        initializeCollections(Db)
-    }
+	for _, initializeCollections := range initializeCollectionsFuncs {
+		initializeCollections(Db)
+	}
 
 	return
 }
