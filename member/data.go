@@ -72,9 +72,18 @@ type GroupData struct {
 	Description base.Text
 }
 
+// Relation between entities
+type RelationData struct {
+	Id    bson.ObjectId `bson:"id"`
+	From  time.Time
+	Until time.Time
+	How   *bson.ObjectId
+}
+
 type SessionData struct {
 	Key          string
-	UserId       bson.ObjectId
+	UserId       *bson.ObjectId
 	Created      time.Time
 	LastActivity time.Time
+	IsGenesis    bool
 }

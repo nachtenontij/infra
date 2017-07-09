@@ -24,16 +24,19 @@ func RegisterMiddleware(f MiddlewareFunc) {
 }
 
 func ListenAndServe() error {
+	// Dial database
 	err := ConnectToDatabase()
 	if err != nil {
 		return fmt.Errorf("Could not connect to database: %s", err)
 	}
 
+	// Reach out to URL routes
 	r := mux.NewRouter()
 	for _, registerUrls := range registerUrlsFuncs {
 		registerUrls(r)
 	}
 
+	// Mediate middleware
 	var handler http.Handler = r
 	for _, middleware := range middlewareFuncs {
 		handler = middleware(handler)
@@ -41,8 +44,8 @@ func ListenAndServe() error {
 
 	http.Handle("/", handler)
 
+	// Let it listen!
 	log.Printf("Listening on %s ...", Settings.BindAddress)
-
 	return http.ListenAndServe(Settings.BindAddress, nil)
 }
 

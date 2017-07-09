@@ -1,8 +1,8 @@
 package server
 
 import (
-	"crypto/rand"
-	"encoding/hex"
+	"github.com/nachtenontij/infra/base"
+	"github.com/nachtenontij/infra/base/server"
 	"github.com/nachtenontij/infra/member"
 	"gopkg.in/hlandau/passlib.v1"
 	"gopkg.in/mgo.v2"
@@ -17,9 +17,49 @@ var ecol *mgo.Collection
 var rcol *mgo.Collection
 
 func InitializeCollections(db *mgo.Database) {
+	// Get collections
 	scol = db.C("sessions")
 	ecol = db.C("entities")
 	rcol = db.C("relations")
+
+	// Check/create indices
+	if err := scol.EnsureIndex(mgo.Index{
+		Key:    []string{"key"},
+		Unique: true,
+	}); err != nil {
+		log.Fatalf("EnsureIndex Key: %s", err)
+	}
+
+	if err := scol.EnsureIndex(mgo.Index{
+		Key:    []string{"isgenesis"},
+		Sparse: true,
+	}); err != nil {
+		log.Fatalf("EnsureIndex IsGenesis: %s", err)
+	}
+
+	if err := scol.EnsureIndex(mgo.Index{
+		Key: []string{"lastactivity"},
+	}); err != nil {
+		log.Fatalf("EnsureIndex LastActivity: %s", err)
+	}
+
+	if err := scol.EnsureIndex(mgo.Index{
+		Key: []string{"userid"},
+	}); err != nil {
+		log.Fatalf("EnsureIndex UserId: %s", err)
+	}
+
+	// Create genesis session
+	log.Printf("Genesis session key: %s", server.Settings.GenesisSessionKey)
+	scol.RemoveAll(bson.M{"isgenesis": true})
+	if err := scol.Insert(&member.SessionData{
+		Key:       server.Settings.GenesisSessionKey,
+		IsGenesis: true,
+	}); err != nil {
+		log.Fatalf("Creating genesis session failed: %s", err)
+	}
+
+	// TODO remove old genesis sessions
 }
 
 type Entity struct {
@@ -80,13 +120,13 @@ func (s *Session) Touch() {
 
 // Saves the session to the database
 func (s *Session) Save() {
-	if err := scol.Update(bson.M{"Key": s.data.Key}, s.data); err != nil {
+	if err := scol.Update(bson.M{"key": s.data.Key}, s.data); err != nil {
 		log.Printf("Session.Save(): scol.Update(): %s", err)
 	}
 }
 
 func (s *Session) Logout() {
-	if err := scol.Remove(bson.M{"Key": s.data.Key}); err != nil {
+	if err := scol.Remove(bson.M{"key": s.data.Key}); err != nil {
 		log.Printf("Session.Logout(): %s", err)
 	}
 }
@@ -100,17 +140,11 @@ func (e *Entity) AssertUser() {
 
 // Creates a new session and returns a sessionkey
 func (e *Entity) NewSession() string {
-	var rawKey [32]byte
 	e.AssertUser()
-	// generate a session key
-	_, err := rand.Read(rawKey[:])
-	if err != nil {
-		panic("no random")
-	}
-	key := hex.Dump(rawKey[:])
+	key := base.GenerateHexSecret(32)
 	data := member.SessionData{
 		Key:          key,
-		UserId:       e.data.Id,
+		UserId:       &e.data.Id,
 		Created:      time.Now(),
 		LastActivity: time.Now(),
 	}
