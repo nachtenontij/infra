@@ -133,8 +133,8 @@ func (s *Session) Logout() {
 
 // Checks whether the user associated to the session is allowed to
 // view and edit the full membership database
-func (s *Session) IsMemberAdmin() {
-	if s.IsGenesis {
+func (s *Session) IsMemberAdmin() bool {
+	if s.data.IsGenesis {
 		return true
 	}
 	// TODO
