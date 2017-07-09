@@ -5,6 +5,7 @@ package member
 import (
 	"gopkg.in/mgo.v2/bson"
 	"time"
+    "github.com/nachtenontij/infra/base"
 )
 
 type EntityData struct {
@@ -13,7 +14,7 @@ type EntityData struct {
 	Kind Kind
 
 	Name           string
-	GenitivePrefix Text
+	GenitivePrefix base.Text
 
 	// Used as loginname and identifiers
 	Handles []string
@@ -46,18 +47,7 @@ type UserData struct {
 
 	DateOfBirth time.Time
 
-	PasskeyHash *PasskeyHash
-}
-
-type PasskeyHashType int8
-
-const (
-	Sha3 PasskeyHashType = iota
-)
-
-type PasskeyHash struct {
-	Type PasskeyHashType
-	Data []byte
+	PasswordHash *string
 }
 
 // Address of a user
@@ -72,7 +62,7 @@ type Address struct {
 
 // Group specific data
 type GroupData struct {
-	Description Text
+	Description base.Text
 }
 
 type SessionData struct {
@@ -81,9 +71,3 @@ type SessionData struct {
 	Created      time.Time
 	LastActivity time.Time
 }
-
-// TODO move
-// String in different languages, e.g.
-//   {"nl": "groepen",
-//    "en": "groups"}
-type Text map[string]string

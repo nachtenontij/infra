@@ -5,6 +5,10 @@ import (
 )
 
 func RegisterUrls(r *mux.Router) {
-	s := r.PathPrefix("/api").Methods("POST").Subrouter()
-	s.HandleFunc("/login", LoginHandler)
+	s := r.PathPrefix("/api").Subrouter()
+
+	s.HandleFunc("/login", LoginHandler).Methods("POST")
+	s.HandleFunc("/logout", LogoutHandler).Methods("POST")
+	s.HandleFunc("/commonData", CommonDataHandler).Methods("GET")
 }
+

@@ -2,7 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/nachtenontij/infra/common/server"
+	"github.com/nachtenontij/infra/base/server"
+	_ "github.com/nachtenontij/infra/member/server"
 	"log"
 )
 
