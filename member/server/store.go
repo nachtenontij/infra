@@ -131,6 +131,16 @@ func (s *Session) Logout() {
 	}
 }
 
+// Checks whether the user associated to the session is allowed to
+// view and edit the full membership database
+func (s *Session) IsMemberAdmin() {
+	if s.IsGenesis {
+		return true
+	}
+	// TODO
+	return false
+}
+
 // Panics if the entity is not a user.
 func (e *Entity) AssertUser() {
 	if e.data.Kind != member.User {

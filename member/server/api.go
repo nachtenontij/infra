@@ -18,6 +18,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !e.CheckPassword(req.Password) {
+		http.Error(w, "bad password", 403)
+		return
+	}
+
 	server.WriteJsonResponse(w, &member.LoginResponse{
 		SessionKey: e.NewSession(),
 	})
@@ -30,8 +35,12 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 	var req member.EnlistRequest
+	session := SessionFromRequest(r)
+	if !session.IsMemberAdmin() {
+		http.Error(w, "access denied", 403)
+		return
+	}
 	if !server.ReadJsonRequest(w, r, &req) {
 		return
 	}
-	server.WriteJsonResponse(w, "hi")
 }
