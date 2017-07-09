@@ -146,13 +146,13 @@ func Confirm(message string) {
 }
 
 func Choose(message string) bool {
-	fmt.Printf("\n%s\n", message)
+	fmt.Printf("\n%s ", message)
 	reply := ""
 	for {
-		fmt.Print("(yes, no, abort)")
+		fmt.Print("([Yes], No, Abort) ")
 		fmt.Scanln(&reply)
 		switch strings.ToLower(reply) {
-		case "yes", "y":
+		case "yes", "y", "":
 			return true
 		case "no", "n":
 			return false
