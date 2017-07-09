@@ -3,9 +3,9 @@
 package member
 
 import (
+	"github.com/nachtenontij/infra/base"
 	"gopkg.in/mgo.v2/bson"
 	"time"
-    "github.com/nachtenontij/infra/base"
 )
 
 type EntityData struct {
@@ -33,15 +33,15 @@ const (
 
 type UserData struct {
 	// Contact
-	EMail   string
-	Address *Address
-    Phonenumbers []string
+	EMail        string
+	Address      *Address
+	Phonenumbers []string
 
-    Person Person
+	Person Person
 
-    InvitedBy   bson.ObjectId
+	InvitedBy bson.ObjectId
 
-    // Security
+	// Security
 	PasswordHash *string
 }
 
@@ -73,7 +73,7 @@ type GroupData struct {
 }
 
 type SessionData struct {
-	Id           bson.ObjectId `bson:"id"`
+	Key          string
 	UserId       bson.ObjectId
 	Created      time.Time
 	LastActivity time.Time

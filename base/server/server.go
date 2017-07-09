@@ -1,19 +1,26 @@
 package server
 
 import (
-	"fmt"
-	"log"
-	"github.com/gorilla/mux"
-	"net/http"
 	"encoding/json"
+	"fmt"
+	"github.com/gorilla/mux"
+	"log"
+	"net/http"
 )
 
 type RegisterUrlsFunc func(*mux.Router)
+type MiddlewareFunc func(http.Handler) http.Handler
 
 var registerUrlsFuncs []RegisterUrlsFunc
+var middlewareFuncs []MiddlewareFunc
 
 func RegisterRegisterUrls(f RegisterUrlsFunc) {
-    registerUrlsFuncs = append(registerUrlsFuncs, f)
+	registerUrlsFuncs = append(registerUrlsFuncs, f)
+}
+
+// TODO priority for middleware?
+func RegisterMiddleware(f MiddlewareFunc) {
+	middlewareFuncs = append(middlewareFuncs, f)
 }
 
 func ListenAndServe() error {
@@ -23,30 +30,36 @@ func ListenAndServe() error {
 	}
 
 	r := mux.NewRouter()
-    for _, registerUrls := range(registerUrlsFuncs) {
-        registerUrls(r)
-    }
-	http.Handle("/", r)
+	for _, registerUrls := range registerUrlsFuncs {
+		registerUrls(r)
+	}
 
-    log.Printf("Listening on %s ...", Settings.BindAddress)
+	var handler http.Handler = r
+	for _, middleware := range middlewareFuncs {
+		handler = middleware(handler)
+	}
+
+	http.Handle("/", handler)
+
+	log.Printf("Listening on %s ...", Settings.BindAddress)
 
 	return http.ListenAndServe(Settings.BindAddress, nil)
 }
 
 func WriteJsonResponse(w http.ResponseWriter, resp interface{}) {
-    data, _ := json.Marshal(resp)
-    w.Header().Set("Content-Type", "application/json")
-    w.Write(data)
+	data, _ := json.Marshal(resp)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
 }
 
 func ReadJsonRequest(w http.ResponseWriter,
-                    r *http.Request,
-                    v interface{}) bool {
-    err := json.Unmarshal([]byte(r.FormValue("request")), v)
-    if err != nil {
-        http.Error(w, fmt.Sprintf(
-            "Missing or malformed request parameter: %s", err), 400)
-        return false
-    }
-    return true
+	r *http.Request,
+	v interface{}) bool {
+	err := json.Unmarshal([]byte(r.FormValue("request")), v)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(
+			"Missing or malformed request parameter: %s", err), 400)
+		return false
+	}
+	return true
 }

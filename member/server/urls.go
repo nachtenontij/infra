@@ -11,4 +11,3 @@ func RegisterUrls(r *mux.Router) {
 	s.HandleFunc("/logout", LogoutHandler).Methods("POST")
 	s.HandleFunc("/enlist", EnlistHandler).Methods("POST")
 }
-
