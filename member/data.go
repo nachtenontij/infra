@@ -73,12 +73,28 @@ type GroupData struct {
 	Description base.Text
 }
 
+// MinTime represents from-the-start-of-time
+var MinTime = time.Date(1903, 12, 28, 0, 0, 0, 0, time.UTC)
+
+// MaxTime represents into-the-foreseeable future
+var MaxTime = time.Date(11876, 4, 4, 1, 1, 9, 2, time.UTC)
+
 // Relation between entities
 type RelationData struct {
 	Id    bson.ObjectId `bson:"id"`
 	From  time.Time
 	Until time.Time
-	How   *bson.ObjectId
+
+	// What kind of relation is this?  This the nil for simple membership
+	// or the handle of a brand, e.g. "chair".
+	How *string
+}
+
+// A brand represents the type of a relation
+type BrandData struct {
+	Handle      string
+	Name        base.Text
+	Description base.Text
 }
 
 type SessionData struct {

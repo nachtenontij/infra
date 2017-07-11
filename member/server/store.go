@@ -12,15 +12,17 @@ import (
 	"time"
 )
 
-var scol *mgo.Collection
-var ecol *mgo.Collection
-var rcol *mgo.Collection
+var scol *mgo.Collection // sessions collection
+var ecol *mgo.Collection // entities collection
+var rcol *mgo.Collection // relations collection
+var bcol *mgo.Collection // brands collections
 
 func InitializeCollections(db *mgo.Database) {
 	// Get collections
 	scol = db.C("sessions")
 	ecol = db.C("entities")
 	rcol = db.C("relations")
+	bcol = db.C("brands")
 
 	// Check/create indices
 	if err := ecol.EnsureIndex(mgo.Index{
@@ -29,6 +31,13 @@ func InitializeCollections(db *mgo.Database) {
 		Sparse: true,
 	}); err != nil {
 		log.Fatalf("EnsureIndex entities.Handles: %s", err)
+	}
+
+	if err := bcol.EnsureIndex(mgo.Index{
+		Key:    []string{"handle"},
+		Unique: true,
+	}); err != nil {
+		log.Fatalf("EnsureIndex brands.Handle: %s", err)
 	}
 
 	if err := scol.EnsureIndex(mgo.Index{
@@ -78,6 +87,14 @@ type Session struct {
 	data *member.SessionData
 }
 
+type Brand struct {
+	data *member.BrandData
+}
+
+type Relation struct {
+	data *member.RelationData
+}
+
 // Finds entity by id
 func ByIdString(id string) *Entity {
 	return ById(bson.ObjectIdHex(id))
@@ -118,6 +135,15 @@ func ByHandle(handle string) *Entity {
 	return fromData(&data)
 }
 
+// Find brand by handle
+func BrandByHandle(handle string) *Brand {
+	var data member.BrandData
+	if ecol.Find(bson.M{"handle": handle}).One(&data) != nil {
+		return nil
+	}
+	return brandFromData(&data)
+}
+
 // Find Entity ID by handle
 func IdByHandle(handle string) *bson.ObjectId {
 	var data member.EntityData
@@ -131,6 +157,11 @@ func IdByHandle(handle string) *bson.ObjectId {
 // Creates an Entity object from an EntityData object
 func fromData(data *member.EntityData) *Entity {
 	return &Entity{data: data}
+}
+
+// Creates a Brand object from an BrandData object
+func brandFromData(data *member.BrandData) *Brand {
+	return &Brand{data: data}
 }
 
 // Finds session by key
