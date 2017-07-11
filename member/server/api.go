@@ -1,8 +1,11 @@
 package server
 
 import (
+	"fmt"
+	"github.com/asaskevich/govalidator"
 	"github.com/nachtenontij/infra/base/server"
 	"github.com/nachtenontij/infra/member"
+	"gopkg.in/mgo.v2/bson"
 	"net/http"
 )
 
@@ -35,7 +38,9 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 	var req member.EnlistRequest
+	var resp member.EnlistResponse
 	session := SessionFromRequest(r)
+
 	if !session.IsMemberAdmin() {
 		http.Error(w, "access denied", 403)
 		return
@@ -43,4 +48,48 @@ func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 	if !server.ReadJsonRequest(w, r, &req) {
 		return
 	}
+
+	if !govalidator.IsEmail(req.EMail) {
+		http.Error(w, "malformed email", 400)
+		return
+	}
+
+	if !member.ValidHandle(req.Handle) {
+		http.Error(w, "malformed handle", 400)
+		return
+	}
+
+	// TODO set genitive prefix
+	resp.Id = bson.NewObjectId()
+	data := member.EntityData{
+		Id:      resp.Id,
+		Kind:    member.User,
+		Name:    req.Person.Name(),
+		Handles: []string{req.Handle},
+		User: &member.UserData{
+			EMail:   req.EMail,
+			Address: &req.Address,
+			Person:  req.Person,
+		},
+	}
+
+	if req.InvitedBy != "" {
+		invitedBy := ExistsByIdString(req.InvitedBy)
+		if invitedBy == nil {
+			http.Error(w, "no such or malformed InvitedBy", 400)
+			return
+		}
+		data.User.InvitedBy = invitedBy
+	}
+
+	if req.Phonenumber != "" {
+		data.User.Phonenumbers = []string{req.Phonenumber}
+	}
+
+	if err := ecol.Insert(data); err != nil {
+		http.Error(w, fmt.Sprintf("failed to insert: %s", err), 400)
+		return
+	}
+
+	server.WriteJsonResponse(w, &resp)
 }

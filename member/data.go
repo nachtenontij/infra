@@ -5,6 +5,7 @@ package member
 import (
 	"github.com/nachtenontij/infra/base"
 	"gopkg.in/mgo.v2/bson"
+	"regexp"
 	"time"
 )
 
@@ -39,7 +40,7 @@ type UserData struct {
 
 	Person Person
 
-	InvitedBy bson.ObjectId
+	InvitedBy *bson.ObjectId
 
 	// Security
 	PasswordHash *string
@@ -86,4 +87,27 @@ type SessionData struct {
 	Created      time.Time
 	LastActivity time.Time
 	IsGenesis    bool
+}
+
+// Returns the full name of a person
+func (p *Person) Name() string {
+	var ret string
+	if p.Nickname != "" {
+		ret += p.Nickname + " "
+	} else if len(p.GivenNames) != 0 {
+		ret += p.GivenNames[0] + " "
+	}
+	if p.TussenVoegsel != "" {
+		ret += p.TussenVoegsel + " "
+	}
+	ret += p.LastName
+	return ret
+}
+
+// Regular expression used by ValidHandle
+var rxHandle = regexp.MustCompile("^[0-9a-z][0-9a-z-]*$")
+
+// Check whether the handle is valid
+func ValidHandle(handle string) bool {
+	return rxHandle.MatchString(handle)
 }

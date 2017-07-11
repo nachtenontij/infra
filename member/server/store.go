@@ -23,30 +23,38 @@ func InitializeCollections(db *mgo.Database) {
 	rcol = db.C("relations")
 
 	// Check/create indices
+	if err := ecol.EnsureIndex(mgo.Index{
+		Key:    []string{"handles"},
+		Unique: true,
+		Sparse: true,
+	}); err != nil {
+		log.Fatalf("EnsureIndex entities.Handles: %s", err)
+	}
+
 	if err := scol.EnsureIndex(mgo.Index{
 		Key:    []string{"key"},
 		Unique: true,
 	}); err != nil {
-		log.Fatalf("EnsureIndex Key: %s", err)
+		log.Fatalf("EnsureIndex sessions.Key: %s", err)
 	}
 
 	if err := scol.EnsureIndex(mgo.Index{
 		Key:    []string{"isgenesis"},
 		Sparse: true,
 	}); err != nil {
-		log.Fatalf("EnsureIndex IsGenesis: %s", err)
+		log.Fatalf("EnsureIndex sessions.IsGenesis: %s", err)
 	}
 
 	if err := scol.EnsureIndex(mgo.Index{
 		Key: []string{"lastactivity"},
 	}); err != nil {
-		log.Fatalf("EnsureIndex LastActivity: %s", err)
+		log.Fatalf("EnsureIndex sessions.LastActivity: %s", err)
 	}
 
 	if err := scol.EnsureIndex(mgo.Index{
 		Key: []string{"userid"},
 	}); err != nil {
-		log.Fatalf("EnsureIndex UserId: %s", err)
+		log.Fatalf("EnsureIndex sessions.UserId: %s", err)
 	}
 
 	// Create genesis session
@@ -75,6 +83,23 @@ func ByIdString(id string) *Entity {
 	return ById(bson.ObjectIdHex(id))
 }
 
+// Checks whether an object exists and returns parsed objectid
+func ExistsByIdString(id string) *bson.ObjectId {
+	if !bson.IsObjectIdHex(id) {
+		return nil
+	}
+	ret := bson.ObjectIdHex(id)
+	n, err := ecol.Find(bson.M{"_id": ret}).Count()
+	if err != nil {
+		log.Printf("ExistsByIdString: %s", err)
+		return nil
+	}
+	if n == 0 {
+		return nil
+	}
+	return &ret
+}
+
 // Finds entity by id
 func ById(id bson.ObjectId) *Entity {
 	var data member.EntityData
@@ -87,10 +112,20 @@ func ById(id bson.ObjectId) *Entity {
 // Find Entity by handle
 func ByHandle(handle string) *Entity {
 	var data member.EntityData
-	if ecol.Find(bson.M{"Handle": handle}).One(&data) != nil {
+	if ecol.Find(bson.M{"handle": handle}).One(&data) != nil {
 		return nil
 	}
 	return fromData(&data)
+}
+
+// Find Entity ID by handle
+func IdByHandle(handle string) *bson.ObjectId {
+	var data member.EntityData
+	if ecol.Find(bson.M{"handle": handle}).Select(
+		bson.M{"_id": 1}).One(&data) != nil {
+		return nil
+	}
+	return &data.Id
 }
 
 // Creates an Entity object from an EntityData object
