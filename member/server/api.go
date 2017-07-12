@@ -36,6 +36,38 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	server.WriteJsonResponse(w, true)
 }
 
+func SelectUserHandler(w http.ResponseWriter, r *http.Request) {
+	var req member.SelectUserRequest
+	var resp member.SelectUserResponse
+	session := SessionFromRequest(r)
+
+	if session == nil || !session.data.IsGenesis {
+		http.Error(w, "access denied", 403)
+		return
+	}
+
+	if session.data.UserId != nil {
+		http.Error(w, "user already set", 400)
+		return
+	}
+
+	if !server.ReadJsonRequest(w, r, &req) {
+		return
+	}
+
+	user := ByHandle(req.Handle)
+	if user == nil {
+		http.Error(w, "no such user", 400)
+		return
+	}
+
+	resp.Id = user.data.Id
+	session.data.UserId = &user.data.Id
+	go session.Save()
+
+	server.WriteJsonResponse(w, &resp)
+}
+
 func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 	var req member.EnlistRequest
 	var resp member.EnlistResponse

@@ -38,13 +38,15 @@ func (p *Program) Run(args []string) {
 
 	// TODO: autogenerate
 	if len(args) == 0 {
-		fmt.Println("subcommands: enlist")
+		fmt.Println("subcommands: enlist, su")
 		os.Exit(2)
 	}
 
 	switch args[0] {
 	case "enlist":
 		p.Enlist(args[1:])
+	case "su":
+		p.SelectUser(args[1:])
 	default:
 		fmt.Printf("%s is not a valid command", os.Args[1])
 	}
@@ -128,8 +130,30 @@ func (p *Program) Enlist(args []string) {
 			break
 		}
 
-		fmt.Printf("request failed: %s", err)
+		fmt.Printf("request failed: %s\n", err)
 		Confirm("Retry?")
+	}
+
+	fmt.Printf("response: %s\n", resp)
+}
+
+func (p *Program) SelectUser(args []string) {
+	fs := flag.NewFlagSet("su", flag.ExitOnError)
+	// no flags yet
+	fs.Parse(args)
+
+	args = fs.Args()
+	if len(args) != 1 {
+		fmt.Println("usage: neo su <handle>")
+		os.Exit(2)
+	}
+
+	req := member.SelectUserRequest{Handle: args[0]}
+	var resp member.SelectUserResponse
+
+	err := p.Request("POST", "su", false, req, &resp)
+	if err != nil {
+		log.Fatalf("request failed: %s\n", err)
 	}
 
 	fmt.Printf("response: %s\n", resp)

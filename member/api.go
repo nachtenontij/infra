@@ -25,3 +25,11 @@ type EnlistRequest struct {
 type EnlistResponse struct {
 	Id bson.ObjectId
 }
+
+type SelectUserRequest struct {
+	Handle string
+}
+
+type SelectUserResponse struct {
+	Id bson.ObjectId
+}
