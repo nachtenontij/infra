@@ -32,8 +32,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	SessionFromRequest(r).Logout()
-	server.WriteJsonResponse(w, true)
+	session := SessionFromRequest(r)
+	if session != nil {
+		session.Logout()
+	}
+	server.WriteJsonResponse(w, session != nil)
 }
 
 func SelectUserHandler(w http.ResponseWriter, r *http.Request) {

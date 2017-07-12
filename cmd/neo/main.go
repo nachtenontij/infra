@@ -39,7 +39,7 @@ func (p *Program) Run(args []string) {
 
 	// TODO: autogenerate
 	if len(args) == 0 {
-		fmt.Println("subcommands: enlist, su, passwd, login")
+		fmt.Println("subcommands: enlist, su, passwd, login, logout")
 		os.Exit(2)
 	}
 
@@ -52,6 +52,8 @@ func (p *Program) Run(args []string) {
 		p.Passwd(args[1:])
 	case "login":
 		p.Login(args[1:])
+	case "logout":
+		p.Logout(args[1:])
 	default:
 		fmt.Printf("%s is not a valid command", os.Args[1])
 	}
@@ -190,6 +192,17 @@ func (p *Program) Login(args []string) {
 	var resp member.LoginResponse
 
 	err := p.Request("POST", "login", false, req, &resp)
+	if err != nil {
+		log.Fatalf("request failed: %s\n", err)
+	}
+
+	fmt.Printf("response: %s\n", resp)
+}
+
+func (p *Program) Logout(args []string) {
+	var resp bool
+
+	err := p.Request("POST", "logout", false, nil, &resp)
 	if err != nil {
 		log.Fatalf("request failed: %s\n", err)
 	}
