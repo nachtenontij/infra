@@ -41,7 +41,7 @@ func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 	var resp member.EnlistResponse
 	session := SessionFromRequest(r)
 
-	if !session.IsMemberAdmin() {
+	if session == nil || !session.IsMemberAdmin() {
 		http.Error(w, "access denied", 403)
 		return
 	}
