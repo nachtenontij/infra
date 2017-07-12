@@ -95,6 +95,11 @@ func (p *Program) Request(method, name string, useQueryString bool,
 	defer httpresp.Body.Close()
 	data, err := ioutil.ReadAll(httpresp.Body)
 
+	if httpresp.StatusCode != 200 {
+		return fmt.Errorf("response %s: %s",
+			httpresp.Status, string(data))
+	}
+
 	err = json.Unmarshal(data, response)
 	if err != nil {
 		return fmt.Errorf("could not unmarshal %s: %s",
@@ -118,14 +123,19 @@ func (c *Enlist) Run(args []string) {
 	var req member.EnlistRequest
 	var resp member.EnlistResponse
 
-	// let the user fill the struct
-	if !FillStruct(&req) {
-		os.Exit(2)
-	}
+	for {
+		// let the user fill the struct
+		if !FillStruct(&req) {
+			os.Exit(2)
+		}
 
-	err := c.Program.Request("POST", "enlist", false, req, &resp)
-	if err != nil {
-		log.Fatalf("request failed: %s", err)
+		err := c.Program.Request("POST", "enlist", false, req, &resp)
+		if err == nil {
+			break
+		}
+
+		fmt.Printf("request failed: %s", err)
+		Confirm("Retry?")
 	}
 
 	fmt.Printf("response: %s\n", resp)
