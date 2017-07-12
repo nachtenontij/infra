@@ -14,24 +14,66 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"os/user"
+	"path"
 	"reflect"
 	"strings"
 )
 
 func main() {
-	(&Program{}).Run(os.Args[1:])
+	p := &Program{}
+
+	p.LoadConfig()
+
+	if p.Url == "" {
+		p.Url = "http://nachtenontij.nl"
+	}
+
+	p.Run(os.Args[1:])
+	p.SaveConfig()
 }
 
 type Program struct {
 	Url     string
 	Session string
+	config  string // path to the configuration file
+}
+
+func (p *Program) LoadConfig() {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatalf("could not get your user: %s\n", err)
+	}
+	p.config = path.Join(usr.HomeDir, ".neo.yaml")
+	if _, err := os.Stat(p.config); os.IsNotExist(err) {
+		return
+	}
+	data, err := ioutil.ReadFile(p.config)
+	if err != nil {
+		log.Fatalf("could not read configuration file: %s\n", err)
+	}
+	err = yaml.Unmarshal(data, p)
+	if err != nil {
+		log.Fatalf("failed to unmarshal configuration: %s\n", err)
+	}
+}
+
+func (p *Program) SaveConfig() {
+	data, err := yaml.Marshal(p)
+	if err != nil {
+		log.Fatalf("failed to marshal configuration: %s\n", err)
+	}
+	err = ioutil.WriteFile(p.config, data, os.ModePerm)
+	if err != nil {
+		log.Fatalf("failed to write to configuration file: %s\n", err)
+	}
 }
 
 func (p *Program) Run(args []string) {
 	fs := flag.NewFlagSet("neo", flag.ExitOnError)
-	fs.StringVar(&p.Url, "url", "https://nachtenontij.nl",
+	fs.StringVar(&p.Url, "url", p.Url,
 		"Url of ontijd")
-	fs.StringVar(&p.Session, "session", "",
+	fs.StringVar(&p.Session, "session", p.Session,
 		"Sets session key manually - for bootstrapping")
 	fs.Parse(args)
 
@@ -59,10 +101,6 @@ func (p *Program) Run(args []string) {
 	}
 }
 
-func (p *Program) Authorization() string {
-	return p.Session
-}
-
 func (p *Program) Request(method, name string, useQueryString bool,
 	request, response interface{}) (err error) {
 
@@ -86,7 +124,7 @@ func (p *Program) Request(method, name string, useQueryString bool,
 		return
 	}
 
-	auth := p.Authorization()
+	auth := p.Session
 	if auth != "" {
 		httpreq.Header.Set("Authorization", "basic "+auth)
 	}
@@ -181,6 +219,12 @@ func (p *Program) Passwd(args []string) {
 }
 
 func (p *Program) Login(args []string) {
+	if p.Session != "" {
+		fmt.Printf("already logged in with sessionkey %s\n", p.Session)
+		Confirm("logout? ")
+		p.Logout([]string{})
+	}
+
 	if len(args) != 1 {
 		fmt.Println("usage: neo login <username>")
 		os.Exit(2)
@@ -196,6 +240,8 @@ func (p *Program) Login(args []string) {
 		log.Fatalf("request failed: %s\n", err)
 	}
 
+	p.Session = resp.SessionKey
+
 	fmt.Printf("response: %s\n", resp)
 }
 
@@ -206,6 +252,8 @@ func (p *Program) Logout(args []string) {
 	if err != nil {
 		log.Fatalf("request failed: %s\n", err)
 	}
+
+	p.Session = ""
 
 	fmt.Printf("response: %s\n", resp)
 }
