@@ -33,3 +33,10 @@ type SelectUserRequest struct {
 type SelectUserResponse struct {
 	Id bson.ObjectId
 }
+
+type PasswdRequest struct {
+	Password string
+}
+
+type PasswdResponse struct {
+}

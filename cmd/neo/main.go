@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/nachtenontij/infra/member"
+	"golang.org/x/crypto/ssh/terminal"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
@@ -38,7 +39,7 @@ func (p *Program) Run(args []string) {
 
 	// TODO: autogenerate
 	if len(args) == 0 {
-		fmt.Println("subcommands: enlist, su")
+		fmt.Println("subcommands: enlist, su, passwd")
 		os.Exit(2)
 	}
 
@@ -47,6 +48,8 @@ func (p *Program) Run(args []string) {
 		p.Enlist(args[1:])
 	case "su":
 		p.SelectUser(args[1:])
+	case "passwd":
+		p.Passwd(args[1:])
 	default:
 		fmt.Printf("%s is not a valid command", os.Args[1])
 	}
@@ -159,10 +162,29 @@ func (p *Program) SelectUser(args []string) {
 	fmt.Printf("response: %s\n", resp)
 }
 
+func (p *Program) Passwd(args []string) {
+	fmt.Print("new password: ")
+	password, err := terminal.ReadPassword(0)
+	fmt.Println()
+	if err != nil {
+		log.Fatalf("could not read password: %s\n", err)
+	}
+
+	req := member.PasswdRequest{Password: string(password)}
+	var resp member.PasswdResponse
+
+	err = p.Request("POST", "passwd", false, req, &resp)
+	if err != nil {
+		log.Fatalf("request failed: %s\n", err)
+	}
+
+	fmt.Printf("response: %s\n", resp)
+}
+
 func FillStruct(obj interface{}) bool {
 	tmpfile, err := ioutil.TempFile("", "")
 	if err != nil {
-		log.Fatalf("could not create temporary file: %s", err)
+		log.Fatalf("could not create temporary file: %s\n", err)
 	}
 	defer os.Remove(tmpfile.Name())
 

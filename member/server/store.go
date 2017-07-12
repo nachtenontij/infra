@@ -178,6 +178,13 @@ func SessionFromRequest(r *http.Request) *Session {
 	return session
 }
 
+func (s *Session) User() *Entity {
+	if id := s.data.UserId; id != nil {
+		return ById(*id)
+	}
+	return nil
+}
+
 // Updates LastActivity on Session
 func (s *Session) Touch() {
 	s.data.LastActivity = time.Now()
@@ -205,6 +212,13 @@ func (s *Session) IsMemberAdmin() bool {
 	}
 	// TODO
 	return false
+}
+
+// Saves the entity to the database
+func (e *Entity) Save() {
+	if err := ecol.Update(bson.M{"id": e.data.Id}, e.data); err != nil {
+		log.Printf("Entity.Save(): ecol.Update(): %s", err)
+	}
 }
 
 // Panics if the entity is not a user.
@@ -239,4 +253,18 @@ func (e *Entity) CheckPassword(password string) bool {
 		return false
 	}
 	return true
+}
+
+func (e *Entity) SetPassword(password string) (err error) {
+	e.AssertUser()
+
+	hash, err := passlib.Hash(password)
+	if err != nil {
+		return
+	}
+
+	e.data.User.PasswordHash = &hash
+	go e.Save()
+
+	return nil
 }

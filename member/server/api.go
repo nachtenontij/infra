@@ -68,6 +68,34 @@ func SelectUserHandler(w http.ResponseWriter, r *http.Request) {
 	server.WriteJsonResponse(w, &resp)
 }
 
+func PasswdHandler(w http.ResponseWriter, r *http.Request) {
+	var req member.PasswdRequest
+	var resp member.PasswdResponse
+	session := SessionFromRequest(r)
+
+	if session == nil {
+		http.Error(w, "access denied", 403)
+		return
+	}
+
+	user := session.User()
+	if user == nil {
+		http.Error(w, "no user in session", 400)
+		return
+	}
+
+	if !server.ReadJsonRequest(w, r, &req) {
+		return
+	}
+
+	if err := user.SetPassword(req.Password); err != nil {
+		http.Error(w, "failed to hash password", 400)
+		return
+	}
+
+	server.WriteJsonResponse(w, &resp)
+}
+
 func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 	var req member.EnlistRequest
 	var resp member.EnlistResponse
