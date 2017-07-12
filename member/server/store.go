@@ -129,7 +129,7 @@ func ById(id bson.ObjectId) *Entity {
 // Find Entity by handle
 func ByHandle(handle string) *Entity {
 	var data member.EntityData
-	if ecol.Find(bson.M{"handle": handle}).One(&data) != nil {
+	if ecol.Find(bson.M{"handles": handle}).One(&data) != nil {
 		return nil
 	}
 	return fromData(&data)
