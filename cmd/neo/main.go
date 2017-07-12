@@ -44,7 +44,7 @@ func (p *Program) Run(args []string) {
 
 	switch args[0] {
 	case "enlist":
-		(&Enlist{Program: *p}).Run(args[1:])
+		p.Enlist(args[1:])
 	default:
 		fmt.Printf("%s is not a valid command", os.Args[1])
 	}
@@ -109,13 +109,7 @@ func (p *Program) Request(method, name string, useQueryString bool,
 	return nil
 }
 
-type Enlist struct {
-	Program
-
-	File string
-}
-
-func (c *Enlist) Run(args []string) {
+func (p *Program) Enlist(args []string) {
 	fs := flag.NewFlagSet("enlist", flag.ExitOnError)
 	// no flags yet
 	fs.Parse(args)
@@ -129,7 +123,7 @@ func (c *Enlist) Run(args []string) {
 			os.Exit(2)
 		}
 
-		err := c.Program.Request("POST", "enlist", false, req, &resp)
+		err := p.Request("POST", "enlist", false, req, &resp)
 		if err == nil {
 			break
 		}
