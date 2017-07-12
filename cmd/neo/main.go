@@ -39,7 +39,7 @@ func (p *Program) Run(args []string) {
 
 	// TODO: autogenerate
 	if len(args) == 0 {
-		fmt.Println("subcommands: enlist, su, passwd")
+		fmt.Println("subcommands: enlist, su, passwd, login")
 		os.Exit(2)
 	}
 
@@ -50,6 +50,8 @@ func (p *Program) Run(args []string) {
 		p.SelectUser(args[1:])
 	case "passwd":
 		p.Passwd(args[1:])
+	case "login":
+		p.Login(args[1:])
 	default:
 		fmt.Printf("%s is not a valid command", os.Args[1])
 	}
@@ -163,17 +165,31 @@ func (p *Program) SelectUser(args []string) {
 }
 
 func (p *Program) Passwd(args []string) {
-	fmt.Print("new password: ")
-	password, err := terminal.ReadPassword(0)
-	fmt.Println()
-	if err != nil {
-		log.Fatalf("could not read password: %s\n", err)
-	}
+	password := Password("new password: ")
 
-	req := member.PasswdRequest{Password: string(password)}
+	req := member.PasswdRequest{Password: password}
 	var resp member.PasswdResponse
 
-	err = p.Request("POST", "passwd", false, req, &resp)
+	err := p.Request("POST", "passwd", false, req, &resp)
+	if err != nil {
+		log.Fatalf("request failed: %s\n", err)
+	}
+
+	fmt.Printf("response: %s\n", resp)
+}
+
+func (p *Program) Login(args []string) {
+	if len(args) != 1 {
+		fmt.Println("usage: neo login <username>")
+		os.Exit(2)
+	}
+	req := member.LoginRequest{
+		Handle:   args[0],
+		Password: Password("password: "),
+	}
+	var resp member.LoginResponse
+
+	err := p.Request("POST", "login", false, req, &resp)
 	if err != nil {
 		log.Fatalf("request failed: %s\n", err)
 	}
@@ -261,4 +277,14 @@ func Choose(message string) bool {
 		}
 	}
 
+}
+
+func Password(message string) string {
+	fmt.Print(message)
+	data, err := terminal.ReadPassword(0)
+	fmt.Println()
+	if err != nil {
+		log.Fatalf("could not read password: %s\n", err)
+	}
+	return string(data)
 }
