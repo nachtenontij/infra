@@ -13,6 +13,11 @@ type LoginResponse struct {
 	SessionKey string
 }
 
+type LogoutRequest struct {
+	// when true log out all sessions of this user
+	All bool
+}
+
 type EnlistRequest struct {
 	Handle      string
 	EMail       string

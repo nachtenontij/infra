@@ -246,9 +246,14 @@ func (p *Program) Login(args []string) {
 }
 
 func (p *Program) Logout(args []string) {
+	req := member.LogoutRequest{}
 	var resp bool
 
-	err := p.Request("POST", "logout", false, nil, &resp)
+	fs := flag.NewFlagSet("logout", flag.ExitOnError)
+	fs.BoolVar(&req.All, "all", false, "close all sessions of this user")
+	fs.Parse(args)
+
+	err := p.Request("POST", "logout", false, req, &resp)
 	if err != nil {
 		log.Fatalf("request failed: %s\n", err)
 	}

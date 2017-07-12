@@ -32,9 +32,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	var req member.LogoutRequest
+	if !server.ReadJsonRequest(w, r, &req) {
+		return
+	}
+
 	session := SessionFromRequest(r)
 	if session != nil {
-		session.Logout()
+		session.Logout(req.All)
 	}
 	server.WriteJsonResponse(w, session != nil)
 }

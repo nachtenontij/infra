@@ -198,9 +198,16 @@ func (s *Session) Save() {
 	}
 }
 
-func (s *Session) Logout() {
+func (s *Session) Logout(all bool) {
 	if err := scol.Remove(bson.M{"key": s.data.Key}); err != nil {
 		log.Printf("Session.Logout(): %s", err)
+	}
+	if !all {
+		return
+	}
+	if _, err := scol.RemoveAll(
+		bson.M{"userid": s.data.UserId}); err != nil {
+		log.Printf("Session.Logout(): All: %s", err)
 	}
 }
 
