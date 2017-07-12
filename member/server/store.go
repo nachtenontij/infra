@@ -167,7 +167,7 @@ func brandFromData(data *member.BrandData) *Brand {
 // Finds session by key
 func SessionByKey(key string) *Session {
 	var data member.SessionData
-	if scol.Find(bson.M{"Key": key}).One(&data) != nil {
+	if scol.Find(bson.M{"key": key}).One(&data) != nil {
 		return nil
 	}
 	return &Session{data: &data}
