@@ -36,7 +36,7 @@ type SelectUserRequest struct {
 }
 
 type SelectUserResponse struct {
-	Id bson.ObjectId
+	Id bson.ObjectId // TODO change to string
 }
 
 type PasswdRequest struct {
@@ -44,4 +44,28 @@ type PasswdRequest struct {
 }
 
 type PasswdResponse struct {
+}
+
+// TODO move to base
+type HandleOrId struct {
+	Handle *string
+	Id     *string
+}
+
+type GetEntityRequest struct {
+	Which HandleOrId `json:"inline"`
+}
+
+type GetEntityRespone struct {
+	// partial EntityData
+	Entity map[string]interface{}
+}
+
+type PatchEntityRequest struct {
+	Which HandleOrId `json:"inline"`
+
+	// EntityData delta
+	Patch map[string]interface{}
+}
+type PatchEntityResponse struct {
 }
