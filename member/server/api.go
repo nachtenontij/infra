@@ -100,6 +100,8 @@ func PasswdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.AuditLog(user, "Changed password")
+
 	server.WriteJsonResponse(w, &resp)
 }
 

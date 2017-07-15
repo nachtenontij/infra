@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"github.com/nachtenontij/infra/base"
 	"github.com/nachtenontij/infra/base/server"
 	"github.com/nachtenontij/infra/member"
@@ -16,6 +17,7 @@ var scol *mgo.Collection // sessions collection
 var ecol *mgo.Collection // entities collection
 var rcol *mgo.Collection // relations collection
 var bcol *mgo.Collection // brands collections
+var acol *mgo.Collection // auditRecords collections
 
 func InitializeCollections(db *mgo.Database) {
 	// Get collections
@@ -23,6 +25,7 @@ func InitializeCollections(db *mgo.Database) {
 	ecol = db.C("entities")
 	rcol = db.C("relations")
 	bcol = db.C("brands")
+	acol = db.C("auditRecords")
 
 	// Check/create indices
 	if err := ecol.EnsureIndex(mgo.Index{
@@ -66,6 +69,18 @@ func InitializeCollections(db *mgo.Database) {
 		log.Fatalf("EnsureIndex sessions.UserId: %s", err)
 	}
 
+	if err := acol.EnsureIndex(mgo.Index{
+		Key: []string{"by"},
+	}); err != nil {
+		log.Fatalf("EnsureIndex auditRecord.By: %s", err)
+	}
+
+	if err := acol.EnsureIndex(mgo.Index{
+		Key: []string{"entity"},
+	}); err != nil {
+		log.Fatalf("EnsureIndex auditRecords.Entity: %s", err)
+	}
+
 	// Create genesis session
 	log.Printf("Genesis session key: %s", server.Settings.GenesisSessionKey)
 	scol.RemoveAll(bson.M{"isgenesis": true})
@@ -90,6 +105,10 @@ type Session struct {
 
 type Brand struct {
 	data *member.BrandData
+}
+
+type AuditRecord struct {
+	data *member.AuditRecordData
 }
 
 type Relation struct {
@@ -285,4 +304,19 @@ func (e *Entity) SetPassword(password string) (err error) {
 	go e.Save()
 
 	return nil
+}
+
+// Create and stores a new audit record
+func (e *Entity) AuditLog(by *Entity, what string, args ...interface{}) {
+	data := member.AuditRecordData{
+		Entity:  e.data.Id,
+		Message: fmt.Sprintf(what, args...),
+		When:    time.Now(),
+	}
+	if by != nil {
+		data.By = &by.data.Id
+	}
+	if err := acol.Insert(&data); err != nil {
+		log.Printf("AuditLog(): acol.Insert(): %s", err)
+	}
 }

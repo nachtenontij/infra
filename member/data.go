@@ -87,7 +87,9 @@ type RelationData struct {
 
 	// What kind of relation is this?  This the nil for simple membership
 	// or the handle of a brand, e.g. "chair".
-	How *string
+	How  *string
+	Who  bson.ObjectId
+	With bson.ObjectId
 }
 
 // A brand represents the type of a relation
@@ -97,12 +99,27 @@ type BrandData struct {
 	Description base.Text
 }
 
+// Data for a user session.  A user can have multiple sessions.
 type SessionData struct {
 	Key          string
 	UserId       *bson.ObjectId
 	Created      time.Time
 	LastActivity time.Time
-	IsGenesis    bool
+
+	// When start up the ontijd daemon will create a "genisis" admin session
+	// (without user attached) to allow scripts to interact (even if
+	// there is no user yet).
+	IsGenesis bool
+}
+
+// Records sensitive actions.  These records are intended to be read
+// by humans --- not by scripts.
+type AuditRecordData struct {
+	Id      bson.ObjectId  `bson:"_id"`
+	By      *bson.ObjectId // Who performed the action.
+	Entity  bson.ObjectId  // On whom/what was the action performed
+	Message string         // What happened
+	When    time.Time
 }
 
 // Returns the full name of a person
