@@ -79,14 +79,13 @@ func SelectUserHandler(w http.ResponseWriter, r *http.Request) {
 func PasswdHandler(w http.ResponseWriter, r *http.Request) {
 	var req member.PasswdRequest
 	var resp member.PasswdResponse
-	session := SessionFromRequest(r)
+	session, user := SessionUserFromRequest(r)
 
 	if session == nil {
 		http.Error(w, "access denied", 403)
 		return
 	}
 
-	user := session.User()
 	if user == nil {
 		http.Error(w, "no user in session", 400)
 		return

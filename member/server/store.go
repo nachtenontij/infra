@@ -85,6 +85,7 @@ type Entity struct {
 
 type Session struct {
 	data *member.SessionData
+	user *Entity
 }
 
 type Brand struct {
@@ -173,16 +174,26 @@ func SessionByKey(key string) *Session {
 	return &Session{data: &data}
 }
 
+// Returns session associated to the request
 func SessionFromRequest(r *http.Request) *Session {
 	session, _ := r.Context().Value("session").(*Session)
 	return session
 }
 
+// Returns session and user associated to the request.
+func SessionUserFromRequest(r *http.Request) (*Session, *Entity) {
+	session := SessionFromRequest(r)
+	return session, session.User()
+}
+
 func (s *Session) User() *Entity {
-	if id := s.data.UserId; id != nil {
-		return ById(*id)
+	if s.user == nil {
+		if s.data.UserId == nil {
+			return nil
+		}
+		s.user = ById(*s.data.UserId)
 	}
-	return nil
+	return s.user
 }
 
 // Updates LastActivity on Session
