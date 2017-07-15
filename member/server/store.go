@@ -107,7 +107,7 @@ func ExistsByIdString(id string) *bson.ObjectId {
 		return nil
 	}
 	ret := bson.ObjectIdHex(id)
-	n, err := ecol.Find(bson.M{"id": ret}).Count()
+	n, err := ecol.Find(bson.M{"_id": ret}).Count()
 	if err != nil {
 		log.Printf("ExistsByIdString: %s", err)
 		return nil
@@ -121,7 +121,7 @@ func ExistsByIdString(id string) *bson.ObjectId {
 // Finds entity by id
 func ById(id bson.ObjectId) *Entity {
 	var data member.EntityData
-	if ecol.Find(bson.M{"id": id}).One(&data) != nil {
+	if ecol.Find(bson.M{"_id": id}).One(&data) != nil {
 		return nil
 	}
 	return fromData(&data)
@@ -149,7 +149,7 @@ func BrandByHandle(handle string) *Brand {
 func IdByHandle(handle string) *bson.ObjectId {
 	var data member.EntityData
 	if ecol.Find(bson.M{"handle": handle}).Select(
-		bson.M{"id": 1}).One(&data) != nil {
+		bson.M{"_id": 1}).One(&data) != nil {
 		return nil
 	}
 	return &data.Id
@@ -234,7 +234,7 @@ func (s *Session) IsMemberAdmin() bool {
 
 // Saves the entity to the database
 func (e *Entity) Save() {
-	if err := ecol.Update(bson.M{"id": e.data.Id}, e.data); err != nil {
+	if err := ecol.Update(bson.M{"_id": e.data.Id}, e.data); err != nil {
 		log.Printf("Entity.Save(): ecol.Update(): %s", err)
 	}
 }

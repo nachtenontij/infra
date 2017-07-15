@@ -10,7 +10,7 @@ import (
 )
 
 type EntityData struct {
-	Id bson.ObjectId `bson:"id"`
+	Id bson.ObjectId `bson:"_id"`
 
 	Kind Kind
 
@@ -81,7 +81,7 @@ var MaxTime = time.Date(11876, 4, 4, 1, 1, 9, 2, time.UTC)
 
 // Relation between entities
 type RelationData struct {
-	Id    bson.ObjectId `bson:"id"`
+	Id    bson.ObjectId `bson:"_id"`
 	From  time.Time
 	Until time.Time
 
