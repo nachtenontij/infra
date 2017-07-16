@@ -1,5 +1,9 @@
 package member
 
+import (
+	"github.com/nachtenontij/infra/base"
+)
+
 type LoginRequest struct {
 	Handle   string
 	Password string
@@ -42,14 +46,8 @@ type PasswdRequest struct {
 type PasswdResponse struct {
 }
 
-// TODO move to base
-type HandleOrId struct {
-	Handle *string
-	Id     *string
-}
-
 type GetEntityRequest struct {
-	Which HandleOrId `json:"inline"`
+	Which base.HandleOrId `json:"inline"`
 }
 
 type GetEntityRespone struct {
@@ -58,7 +56,7 @@ type GetEntityRespone struct {
 }
 
 type PatchEntityRequest struct {
-	Which HandleOrId `json:"inline"`
+	Which base.HandleOrId `json:"inline"`
 
 	// EntityData delta
 	Patch map[string]interface{}
