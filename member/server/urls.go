@@ -12,4 +12,5 @@ func RegisterUrls(r *mux.Router) {
 	s.HandleFunc("/enlist", EnlistHandler).Methods("POST")
 	s.HandleFunc("/su", SelectUserHandler).Methods("POST")
 	s.HandleFunc("/passwd", PasswdHandler).Methods("POST")
+	s.HandleFunc("/entity", GetEntityHandler).Methods("GET")
 }

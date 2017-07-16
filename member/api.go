@@ -50,16 +50,16 @@ type GetEntityRequest struct {
 	Which base.HandleOrId `json:"inline"`
 }
 
-type GetEntityRespone struct {
+type GetEntityResponse struct {
 	// partial EntityData
-	Entity map[string]interface{}
+	Entity base.Patch
 }
 
 type PatchEntityRequest struct {
 	Which base.HandleOrId `json:"inline"`
 
 	// EntityData delta
-	Patch map[string]interface{}
+	Patch base.Patch
 }
 type PatchEntityResponse struct {
 }

@@ -163,3 +163,28 @@ func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 
 	server.WriteJsonResponse(w, &resp)
 }
+
+func GetEntityHandler(w http.ResponseWriter, r *http.Request) {
+	var req member.GetEntityRequest
+	var resp member.GetEntityResponse
+	session, _ := SessionUserFromRequest(r)
+
+	if session == nil {
+		http.Error(w, "access denied", 403)
+		return
+	}
+
+	if !server.ReadJsonRequest(w, r, &req) {
+		return
+	}
+
+	e := ByHoi(req.Which)
+	if e == nil {
+		http.Error(w, "no such entity", 404)
+		return
+	}
+
+	// TODO
+
+	server.WriteJsonResponse(w, &resp)
+}

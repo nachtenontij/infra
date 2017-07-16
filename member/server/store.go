@@ -146,13 +146,22 @@ func ById(id bson.ObjectId) *Entity {
 	return fromData(&data)
 }
 
-// Find Entity by handle
 func ByHandle(handle string) *Entity {
 	var data member.EntityData
 	if ecol.Find(bson.M{"handles": handle}).One(&data) != nil {
 		return nil
 	}
 	return fromData(&data)
+}
+
+func ByHoi(hoi base.HandleOrId) *Entity {
+	if hoi.Id != nil {
+		return ByIdString(*hoi.Id)
+	}
+	if hoi.Handle != nil {
+		return ByHandle(*hoi.Handle)
+	}
+	return nil
 }
 
 // Find brand by handle
