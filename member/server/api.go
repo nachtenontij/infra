@@ -69,7 +69,7 @@ func SelectUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp.Id = user.data.Id
+	resp.Id = user.data.Id.Hex()
 	session.data.UserId = &user.data.Id
 	go session.Save()
 
@@ -129,9 +129,10 @@ func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO set genitive prefix
-	resp.Id = bson.NewObjectId()
+	id := bson.NewObjectId()
+	resp.Id = id.Hex()
 	data := member.EntityData{
-		Id:      resp.Id,
+		Id:      id,
 		Kind:    member.User,
 		Name:    req.Person.Name(),
 		Handles: []string{req.Handle},
