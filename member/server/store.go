@@ -140,13 +140,22 @@ type Relation struct {
 	data *member.RelationData
 }
 
+// Convenience struct for AddRelation
+type NewRelationData struct {
+	From  *time.Time
+	Until *time.Time
+	How   *string
+	Who   base.Ider
+	With  base.Ider
+}
+
 // Finds entity by id
 func ByIdString(id string) *Entity {
 	parsedId := base.IdHex(id)
 	if parsedId == nil {
 		return nil
 	}
-	return ById(*parsedId)
+	return ById(parsedId)
 }
 
 // Checks whether an object exists and returns parsed objectid
@@ -167,9 +176,9 @@ func ExistsByIdString(id string) *base.Id {
 }
 
 // Finds entity by id
-func ById(id base.Id) *Entity {
+func ById(id base.Ider) *Entity {
 	var data member.EntityData
-	if ecol.Find(bson.M{"_id": id}).One(&data) != nil {
+	if ecol.Find(bson.M{"_id": id.Id()}).One(&data) != nil {
 		return nil
 	}
 	return fromData(&data)
@@ -239,7 +248,7 @@ func (s *Session) User() *Entity {
 		if s.data.UserId == nil {
 			return nil
 		}
-		s.user = ById(*s.data.UserId)
+		s.user = ById(s.data.UserId)
 	}
 	return s.user
 }
@@ -351,10 +360,50 @@ func (e *Entity) AuditLog(by *Entity, what string, args ...interface{}) {
 		log.Printf("AuditLog(): acol.Insert(): %s", err)
 	}
 }
+
 func (e *Entity) Id() base.Id {
 	return e.data.Id
 }
 
 func (r *Relation) Id() base.Id {
 	return r.data.Id
+}
+
+// Add a relation.
+func AddRelation(rel NewRelationData) error {
+	var data member.RelationData
+	if rel.Who == nil {
+		return fmt.Errorf("rel.Who can't be nil")
+	}
+	if rel.With == nil {
+		return fmt.Errorf("rel.With can't be nil")
+	}
+	data.Who = rel.Who.Id()
+	data.With = rel.With.Id()
+	data.How = rel.How
+	data.Id = base.NewId()
+	if rel.From == nil {
+		data.From = member.MinTime
+	} else {
+		data.From = *rel.From
+	}
+	if rel.Until == nil {
+		data.Until = member.MaxTime
+	} else {
+		data.Until = *rel.Until
+	}
+	err := rcol.Insert(data)
+	if err != nil {
+		log.Printf("AddRelation: %s", err)
+	}
+	return err
+}
+
+// Add an entity
+func AddEntity(data member.EntityData) error {
+	err := ecol.Insert(data)
+	if err != nil {
+		log.Printf("AddEntity: %s", err)
+	}
+	return err
 }

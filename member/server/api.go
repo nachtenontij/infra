@@ -155,7 +155,7 @@ func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 		data.User.Phonenumbers = []string{req.Phonenumber}
 	}
 
-	if err := ecol.Insert(data); err != nil {
+	if err := AddEntity(data); err != nil {
 		http.Error(w, fmt.Sprintf("failed to insert: %s", err), 400)
 		return
 	}
