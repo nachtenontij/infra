@@ -36,6 +36,31 @@ func InitializeCollections(db *mgo.Database) {
 		log.Fatalf("EnsureIndex entities.Handles: %s", err)
 	}
 
+	if err := rcol.EnsureIndex(mgo.Index{
+		Key:    []string{"how"},
+		Sparse: true,
+	}); err != nil {
+		log.Fatalf("EnsureIndex relations.How: %s", err)
+	}
+
+	if err := rcol.EnsureIndex(mgo.Index{
+		Key: []string{"with"},
+	}); err != nil {
+		log.Fatalf("EnsureIndex relations.With: %s", err)
+	}
+
+	if err := rcol.EnsureIndex(mgo.Index{
+		Key: []string{"who"},
+	}); err != nil {
+		log.Fatalf("EnsureIndex relations.Who: %s", err)
+	}
+
+	if err := rcol.EnsureIndex(mgo.Index{
+		Key: []string{"until", "-from"},
+	}); err != nil {
+		log.Fatalf("EnsureIndex relations.Until/From: %s", err)
+	}
+
 	if err := bcol.EnsureIndex(mgo.Index{
 		Key:    []string{"handle"},
 		Unique: true,
@@ -117,15 +142,19 @@ type Relation struct {
 
 // Finds entity by id
 func ByIdString(id string) *Entity {
-	return ById(bson.ObjectIdHex(id))
+	parsedId := base.IdHex(id)
+	if parsedId == nil {
+		return nil
+	}
+	return ById(*parsedId)
 }
 
 // Checks whether an object exists and returns parsed objectid
-func ExistsByIdString(id string) *bson.ObjectId {
-	if !bson.IsObjectIdHex(id) {
+func ExistsByIdString(id string) *base.Id {
+	ret := base.IdHex(id)
+	if ret == nil {
 		return nil
 	}
-	ret := bson.ObjectIdHex(id)
 	n, err := ecol.Find(bson.M{"_id": ret}).Count()
 	if err != nil {
 		log.Printf("ExistsByIdString: %s", err)
@@ -134,11 +163,11 @@ func ExistsByIdString(id string) *bson.ObjectId {
 	if n == 0 {
 		return nil
 	}
-	return &ret
+	return ret
 }
 
 // Finds entity by id
-func ById(id bson.ObjectId) *Entity {
+func ById(id base.Id) *Entity {
 	var data member.EntityData
 	if ecol.Find(bson.M{"_id": id}).One(&data) != nil {
 		return nil
@@ -165,7 +194,7 @@ func BrandByHandle(handle string) *Brand {
 }
 
 // Find Entity ID by handle
-func IdByHandle(handle string) *bson.ObjectId {
+func IdByHandle(handle string) *base.Id {
 	var data member.EntityData
 	if ecol.Find(bson.M{"handle": handle}).Select(
 		bson.M{"_id": 1}).One(&data) != nil {
@@ -253,7 +282,7 @@ func (s *Session) IsMemberAdmin() bool {
 
 // Saves the entity to the database
 func (e *Entity) Save() {
-	if err := ecol.Update(bson.M{"_id": e.data.Id}, e.data); err != nil {
+	if err := ecol.Update(bson.M{"_id": e.Id()}, e.data); err != nil {
 		log.Printf("Entity.Save(): ecol.Update(): %s", err)
 	}
 }
@@ -269,9 +298,10 @@ func (e *Entity) AssertUser() {
 func (e *Entity) NewSession() string {
 	e.AssertUser()
 	key := base.GenerateHexSecret(32)
+	userId := e.Id()
 	data := member.SessionData{
 		Key:          key,
-		UserId:       &e.data.Id,
+		UserId:       &userId,
 		Created:      time.Now(),
 		LastActivity: time.Now(),
 	}
@@ -309,14 +339,22 @@ func (e *Entity) SetPassword(password string) (err error) {
 // Create and stores a new audit record
 func (e *Entity) AuditLog(by *Entity, what string, args ...interface{}) {
 	data := member.AuditRecordData{
-		Entity:  e.data.Id,
+		Entity:  e.Id(),
 		Message: fmt.Sprintf(what, args...),
 		When:    time.Now(),
 	}
 	if by != nil {
-		data.By = &by.data.Id
+		byId := by.Id()
+		data.By = &byId
 	}
 	if err := acol.Insert(&data); err != nil {
 		log.Printf("AuditLog(): acol.Insert(): %s", err)
 	}
+}
+func (e *Entity) Id() base.Id {
+	return e.data.Id
+}
+
+func (r *Relation) Id() base.Id {
+	return r.data.Id
 }

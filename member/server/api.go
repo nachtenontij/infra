@@ -3,9 +3,9 @@ package server
 import (
 	"fmt"
 	"github.com/asaskevich/govalidator"
+	"github.com/nachtenontij/infra/base"
 	"github.com/nachtenontij/infra/base/server"
 	"github.com/nachtenontij/infra/member"
-	"gopkg.in/mgo.v2/bson"
 	"net/http"
 )
 
@@ -69,8 +69,8 @@ func SelectUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp.Id = user.data.Id
-	session.data.UserId = &user.data.Id
+	resp.Id = user.Id()
+	session.data.UserId = &resp.Id
 	go session.Save()
 
 	server.WriteJsonResponse(w, &resp)
@@ -129,7 +129,7 @@ func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO set genitive prefix
-	resp.Id = bson.NewObjectId()
+	resp.Id = base.NewId()
 	data := member.EntityData{
 		Id:      resp.Id,
 		Kind:    member.User,

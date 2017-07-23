@@ -1,7 +1,7 @@
 package member
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"github.com/nachtenontij/infra/base"
 )
 
 type LoginRequest struct {
@@ -28,7 +28,7 @@ type EnlistRequest struct {
 }
 
 type EnlistResponse struct {
-	Id bson.ObjectId
+	Id base.Id
 }
 
 type SelectUserRequest struct {
@@ -36,7 +36,7 @@ type SelectUserRequest struct {
 }
 
 type SelectUserResponse struct {
-	Id bson.ObjectId // TODO change to string
+	Id base.Id // TODO change to string
 }
 
 type PasswdRequest struct {

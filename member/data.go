@@ -4,13 +4,12 @@ package member
 
 import (
 	"github.com/nachtenontij/infra/base"
-	"gopkg.in/mgo.v2/bson"
 	"regexp"
 	"time"
 )
 
 type EntityData struct {
-	Id bson.ObjectId `bson:"_id"`
+	Id base.Id `bson:"_id"`
 
 	Kind Kind
 
@@ -40,7 +39,7 @@ type UserData struct {
 
 	Person Person
 
-	InvitedBy *bson.ObjectId
+	InvitedBy *base.Id
 
 	// Security
 	PasswordHash *string
@@ -81,15 +80,15 @@ var MaxTime = time.Date(11876, 4, 4, 1, 1, 9, 2, time.UTC)
 
 // Relation between entities
 type RelationData struct {
-	Id    bson.ObjectId `bson:"_id"`
+	Id    base.Id `bson:"_id"`
 	From  time.Time
 	Until time.Time
 
 	// What kind of relation is this?  This the nil for simple membership
 	// or the handle of a brand, e.g. "chair".
 	How  *string
-	Who  bson.ObjectId
-	With bson.ObjectId
+	Who  base.Id
+	With base.Id
 }
 
 // A brand represents the type of a relation
@@ -102,7 +101,7 @@ type BrandData struct {
 // Data for a user session.  A user can have multiple sessions.
 type SessionData struct {
 	Key          string
-	UserId       *bson.ObjectId
+	UserId       *base.Id
 	Created      time.Time
 	LastActivity time.Time
 
@@ -115,10 +114,10 @@ type SessionData struct {
 // Records sensitive actions.  These records are intended to be read
 // by humans --- not by scripts.
 type AuditRecordData struct {
-	Id      bson.ObjectId  `bson:"_id"`
-	By      *bson.ObjectId // Who performed the action.
-	Entity  bson.ObjectId  // On whom/what was the action performed
-	Message string         // What happened
+	Id      base.Id  `bson:"_id"`
+	By      *base.Id // Who performed the action.
+	Entity  base.Id  // On whom/what was the action performed
+	Message string   // What happened
 	When    time.Time
 }
 
