@@ -28,7 +28,7 @@ type EnlistRequest struct {
 }
 
 type EnlistResponse struct {
-	Id string
+	Id base.Id
 }
 
 type SelectUserRequest struct {
@@ -36,7 +36,7 @@ type SelectUserRequest struct {
 }
 
 type SelectUserResponse struct {
-	Id string
+	Id base.Id
 }
 
 type PasswdRequest struct {

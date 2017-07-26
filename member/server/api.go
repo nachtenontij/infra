@@ -6,7 +6,6 @@ import (
 	"github.com/nachtenontij/infra/base"
 	"github.com/nachtenontij/infra/base/server"
 	"github.com/nachtenontij/infra/member"
-	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"reflect"
 )
@@ -71,8 +70,9 @@ func SelectUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp.Id = user.data.Id.Hex()
-	session.data.UserId = &user.data.Id
+	resp.Id = user.Id()
+	session.data.UserId = &resp.Id
+
 	go session.Save()
 
 	server.WriteJsonResponse(w, &resp)
@@ -131,10 +131,10 @@ func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO set genitive prefix
-	id := bson.NewObjectId()
-	resp.Id = id.Hex()
+	resp.Id = base.NewId()
+
 	data := member.EntityData{
-		Id:      id,
+		Id:      resp.Id,
 		Kind:    member.User,
 		Name:    req.Person.Name(),
 		Handles: []string{req.Handle},
@@ -158,7 +158,7 @@ func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 		data.User.Phonenumbers = []string{req.Phonenumber}
 	}
 
-	if err := ecol.Insert(data); err != nil {
+	if err := AddEntity(data); err != nil {
 		http.Error(w, fmt.Sprintf("failed to insert: %s", err), 400)
 		return
 	}
