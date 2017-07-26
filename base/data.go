@@ -58,3 +58,11 @@ func IdHex(hex string) *Id {
 	ret := Id(bson.ObjectIdHex(hex))
 	return &ret
 }
+
+// Convert []Iders to []Id
+func Ids(iders []Ider) (ret []Id) {
+	for _, ider := range iders {
+		ret = append(ret, ider.Id())
+	}
+	return
+}

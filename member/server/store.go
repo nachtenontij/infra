@@ -149,6 +149,23 @@ type NewRelationData struct {
 	With  base.Ider
 }
 
+// A query for relations.  Used in the QueryRelations function.
+// Each of the fields represents a possible restriction on the relations
+// that should be returned.
+type RelationQuery struct {
+	// Match relation if the Who is one of these.  Ignored if the list is
+	// empty.  List should not contain nil.
+	Who  []base.Ider
+	With []base.Ider // Match relation if With is one of these.  See Who.
+	How  []*string   // Match relation if How is one of these. See Who.
+
+	// Match relations whose running time has non-empty intersection
+	// with the interval From and Until forms.  A nil value is taken
+	// to be ancient history for From and distant future for Until.
+	From  *time.Time
+	Until *time.Time // See From.
+}
+
 // Finds entity by id
 func ByIdString(id string) *Entity {
 	parsedId := base.IdHex(id)
@@ -406,4 +423,115 @@ func AddEntity(data member.EntityData) error {
 		log.Printf("AddEntity: %s", err)
 	}
 	return err
+}
+
+// Find relations that match any of the given queries.  See RelationQuery
+func QueryRelations(queries []RelationQuery) []member.RelationData {
+	if len(queries) == 0 {
+		log.Printf("Warning: QueryRelations called with empty queries variable")
+		return nil
+	}
+
+	// We will construct a mongo query of the form
+	//      {"$or": bits}
+	var bits []map[string]interface{}
+
+	for _, query := range queries {
+		bit := make(map[string]interface{})
+
+		// Put Who into mongo query
+		if len(query.Who) == 1 {
+			bit["who"] = query.Who[0].Id()
+		} else if len(query.Who) > 1 {
+			bit["who"] = bson.M{"$in": base.Ids(query.Who)}
+		}
+
+		// Put With into mongo query
+		if len(query.With) == 1 {
+			bit["with"] = query.With[0].Id()
+		} else if len(query.With) > 1 {
+			bit["with"] = bson.M{"$in": base.Ids(query.With)}
+		}
+
+		// Put How into mongo query
+		if len(query.How) == 1 {
+			bit["how"] = query.How[0]
+		} else if len(query.How) > 1 {
+			bit["how"] = bson.M{"$in": query.How}
+		}
+
+		// Handle nil From and Until
+		from := member.MinTime
+		until := member.MaxTime
+		if query.From != nil {
+			from = *query.From
+		}
+		if query.Until != nil {
+			bit["until"] = *query.Until
+		}
+
+		// For the situation MinTime < From < Until < MaxTime, we have to
+		// put in most effort.  In the other cases, we can simplify the
+		// bits required for this Query.
+		if from == member.MinTime && until == member.MaxTime {
+			bits = append(bits, bit)
+		} else if from == until ||
+			from == member.MinTime ||
+			until == member.MaxTime {
+			bit["from"] = bson.M{"$lte": until}
+			bit["until"] = bson.M{"$gte": from}
+			bits = append(bits, bit)
+		} else {
+			// the tedious case: we need three bits for this query, for
+			// three cases.
+			var bit_a, bit_b, bit_c map[string]interface{}
+
+			for k, v := range bit {
+				bit_a[k] = v
+				bit_b[k] = v
+				bit_c[k] = v
+			}
+
+			// Case a:   query:                |-------|
+			//           relation(s):      |-------|
+			//                                   |-|
+			bit_a["from"] = bson.M{"$gte": member.MinTime} // to hit index
+			bit_a["until"] = bson.M{"$lte": until, "$gte": from}
+
+			// Case b:   query:                |-------|
+			//           relation(s):               |-------|
+			//                                      |-|
+			//  (this overlaps with case a, but that doesn't hurt.)
+			bit_b["from"] = bson.M{"$lte": until, "$gte": from}
+			bit_b["until"] = bson.M{"$gte": member.MinTime} // to hit index
+
+			// Case c:   query:                |-------|
+			//           relation:          |--------------|
+			bit_c["from"] = bson.M{"$lte": from}
+			bit_c["until"] = bson.M{"$gte": until}
+
+			bits = append(bits, bit_a, bit_b, bit_c)
+		}
+	}
+
+	var finalQuery map[string]interface{}
+
+	// If bits is a one-element array, the $or query does not return anything,
+	// even though it should.  Bug in MongoDB?
+	if len(bits) == 1 {
+		finalQuery = bits[0]
+	} else {
+		finalQuery = bson.M{"$or": bits}
+	}
+
+	// Perform the query!
+	cursor := rcol.Find(finalQuery)
+
+	var result []member.RelationData
+	if err := cursor.All(&result); err != nil {
+		log.Printf("QueryRelations rcol.Find(): %s", err)
+		return nil
+	}
+
+	return result
 }
