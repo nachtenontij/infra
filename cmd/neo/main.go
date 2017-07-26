@@ -96,6 +96,8 @@ func (p *Program) Run(args []string) {
 		p.Login(args[1:])
 	case "logout":
 		p.Logout(args[1:])
+	case "get":
+		p.Get(args[1:])
 	default:
 		fmt.Printf("%s is not a valid command", os.Args[1])
 	}
@@ -112,6 +114,8 @@ func (p *Program) Request(method, name string, useQueryString bool,
 		return
 	}
 	query := url.Values{"request": {string(reqdata)}}.Encode()
+
+	log.Println(string(reqdata))
 
 	if useQueryString {
 		u = u + "?" + query
@@ -259,6 +263,36 @@ func (p *Program) Logout(args []string) {
 	}
 
 	p.Session = ""
+
+	fmt.Printf("response: %s\n", resp)
+}
+
+func (p *Program) Get(args []string) {
+	var req member.GetEntityRequest
+	var resp member.GetEntityResponse
+
+	var id bool
+
+	fs := flag.NewFlagSet("get", flag.ExitOnError)
+	fs.BoolVar(&id, "id", false, "")
+	fs.Parse(args)
+	args = fs.Args()
+
+	if len(args) != 1 {
+		fmt.Println("usage: neo get <handle-or-id>")
+		os.Exit(2)
+	}
+
+	if id {
+		req.Which.Id = &args[0]
+	} else {
+		req.Which.Handle = &args[0]
+	}
+
+	err := p.Request("GET", "entity", true, req, &resp)
+	if err != nil {
+		log.Fatalf("request failed: %s\n", err)
+	}
 
 	fmt.Printf("response: %s\n", resp)
 }

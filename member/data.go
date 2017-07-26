@@ -12,13 +12,13 @@ import (
 type EntityData struct {
 	Id bson.ObjectId `bson:"_id"`
 
-	Kind Kind
+	Kind Kind `read:all`
 
-	Name           string
-	GenitivePrefix base.Text
+	Name           string    `read:"all"`
+	GenitivePrefix base.Text `read:"all"`
 
 	// Used as loginname and identifiers
-	Handles []string
+	Handles []string `read:all`
 
 	Group *GroupData
 	User  *UserData
@@ -34,9 +34,9 @@ const (
 
 type UserData struct {
 	// Contact
-	EMail        string
-	Address      *Address
-	Phonenumbers []string
+	EMail        string   `read:"user",write:"user"`
+	Address      *Address `read:"user",write:"user"`
+	Phonenumbers []string `read:"user",write:"user"`
 
 	Person Person
 
@@ -47,15 +47,20 @@ type UserData struct {
 }
 
 type Person struct {
-	GivenNames    []string // e.g. ["Claire", "Marie"]
-	TussenVoegsel string   // e.g. van der, van
-	LastName      string
-	Nickname      string // e.g. Homer
-	Gender        string // e.g. "", "vrouw", "man", ...
-	Prefix        string // e.g. Mr.
-	Suffix        string // e.g. M.Sc
-
-	DateOfBirth time.Time
+	// e.g. ["Claire", "Marie"]
+	GivenNames []string `read:"all",write:"admin"`
+	// e.g. van der, van
+	TussenVoegsel string `read:"all",write:"admin"`
+	LastName      string `read:"all",write:"admin"`
+	// e.g. Homer
+	Nickname string `read:"all",write:"admin"`
+	// e.g. "", "vrouw", "man", ...
+	Gender string `read:"all",write:"user"`
+	// e.g. Mr.
+	Prefix string `read:"all",write:"user"`
+	// e.g. M.Sc
+	Suffix      string    `read:"all",write:"user"`
+	DateOfBirth time.Time `read:"user",write:"user"`
 }
 
 // Address of a user

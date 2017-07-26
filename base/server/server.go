@@ -61,7 +61,8 @@ func ReadJsonRequest(w http.ResponseWriter,
 	err := json.Unmarshal([]byte(r.FormValue("request")), v)
 	if err != nil {
 		http.Error(w, fmt.Sprintf(
-			"Missing or malformed request parameter: %s", err), 400)
+			"Missing or malformed request parameter: %s ",
+			err), 400)
 		return false
 	}
 	return true

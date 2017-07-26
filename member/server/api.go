@@ -3,10 +3,12 @@ package server
 import (
 	"fmt"
 	"github.com/asaskevich/govalidator"
+	"github.com/nachtenontij/infra/base"
 	"github.com/nachtenontij/infra/base/server"
 	"github.com/nachtenontij/infra/member"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
+	"reflect"
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +169,7 @@ func EnlistHandler(w http.ResponseWriter, r *http.Request) {
 func GetEntityHandler(w http.ResponseWriter, r *http.Request) {
 	var req member.GetEntityRequest
 	var resp member.GetEntityResponse
-	session, _ := SessionUserFromRequest(r)
+	session, user := SessionUserFromRequest(r)
 
 	if session == nil {
 		http.Error(w, "access denied", 403)
@@ -184,7 +186,38 @@ func GetEntityHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO
+	clearance := map[string]bool{
+		"all":   true,
+		"user":  false,
+		"admin": false,
+	}
+
+	if user != nil && user.data.Id == e.data.Id {
+		clearance["user"] = true
+	}
+
+	if session.IsMemberAdmin() {
+		clearance["admin"] = true
+		clearance["user"] = true
+	}
+
+	resp.Entity = base.PatchFromTags(e.data,
+		func(tag reflect.StructTag) bool {
+			var v string
+
+			v, ok := tag.Lookup("read")
+			if !ok {
+				return false
+			}
+
+			access, ok := clearance[v]
+
+			if !ok {
+				panic("unknown confidentiality level")
+			}
+
+			return access
+		})
 
 	server.WriteJsonResponse(w, &resp)
 }

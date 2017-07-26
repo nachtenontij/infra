@@ -47,7 +47,7 @@ type PasswdResponse struct {
 }
 
 type GetEntityRequest struct {
-	Which base.HandleOrId `json:"inline"`
+	Which base.HandleOrId
 }
 
 type GetEntityResponse struct {
